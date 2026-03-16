@@ -1,10 +1,3 @@
-/*
- * wifi.c
- *
- * Created: 15/03/2026 21:30:42
- *  Author: maria
- */ 
-
 #define F_CPU 16000000UL
 
 #include <avr/io.h>
@@ -14,122 +7,58 @@
 #include "../../MCAL/UART/uart.h"
 #include "wifi.h"
 
+/* Initialize ESP WiFi module */
 void WIFI_Init(void)
 {
-	_delay_ms(3000);  // wait for ESP8266 boot
+	_delay_ms(3000);  // wait for ESP boot
 
 	UART_SendString("AT\r\n");
 	UART_WaitFor("OK");
 
-	/* Set station mode */
+	// Set station mode
 	UART_SendString("AT+CWMODE=1\r\n");
 	UART_WaitFor("OK");
 }
 
-/* -------------------------------------------------- */
 /* Connect to WiFi */
-/* -------------------------------------------------- */
-
 uint8_t WIFI_Connect(void)
 {
 	char cmd[100];
-
 	sprintf(cmd, "AT+CWJAP=\"%s\",\"%s\"\r\n", WIFI_SSID, WIFI_PASSWORD);
 	UART_SendString(cmd);
 
 	if (UART_WaitFor("WIFI GOT IP"))
-	{
-		return 1;
-	}
+	return 1;
 	else
-	{
-		return 0;
-	}
+	return 0;
 }
 
-/* -------------------------------------------------- */
-/* Send Data to Blynk */
-/* -------------------------------------------------- */
-
+/* Send value to Blynk */
 void WIFI_SendBlynkValue(uint8_t value)
 {
 	char httpRequest[200];
-	char cmd[40];
-
 	sprintf(httpRequest,
 	"GET /external/api/update?token=%s&v1=%d HTTP/1.1\r\n"
 	"Host: blynk.cloud\r\n"
 	"Connection: close\r\n\r\n",
 	BLYNK_AUTH_TOKEN, value);
 
-	UART_SendString("AT+CIPSTART=\"TCP\",\"blynk.cloud\",80\r\n");
+	WIFI_SendHTTPRequest("blynk.cloud", httpRequest);
+}
+
+/* Generic HTTP request sender */
+void WIFI_SendHTTPRequest(const char* host, const char* request)
+{
+	char cmd[50];
+
+	sprintf(cmd, "AT+CIPSTART=\"TCP\",\"%s\",80\r\n", host);
+	UART_SendString(cmd);
 	UART_WaitFor("OK");
 
-	sprintf(cmd, "AT+CIPSEND=%d\r\n", strlen(httpRequest));
+	sprintf(cmd, "AT+CIPSEND=%d\r\n", strlen(request));
 	UART_SendString(cmd);
-
 	UART_WaitFor(">");
 
-	UART_SendString(httpRequest);
-
+	UART_SendString(request);
 	UART_WaitFor("SEND OK");
-}
-
-/* -------------------------------------------------- */
-/* Send Telegram Alert */
-/* -------------------------------------------------- */
-
-void WIFI_SendTelegramAlert(char *message)
-{
-	char httpRequest[300];
-	char cmd[40];
-
-	sprintf(httpRequest,
-	"GET /bot%s/sendMessage?chat_id=%s&text=%s HTTP/1.1\r\n"
-	"Host: api.telegram.org\r\n"
-	"Connection: close\r\n\r\n",
-	TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, message);
-
-	UART_SendString("AT+CIPSTART=\"TCP\",\"api.telegram.org\",80\r\n");
-	UART_WaitFor("OK");
-
-	sprintf(cmd, "AT+CIPSEND=%d\r\n", strlen(httpRequest));
-	UART_SendString(cmd);
-
-	UART_WaitFor(">");
-
-	UART_SendString(httpRequest);
-
-	UART_WaitFor("SEND OK");
-}
-
-void Telegram_Init(void)
-{
-	// Any initialization if needed (for now just WiFi is required)
-	WIFI_Init();
-	if(!WIFI_Connect())
-	{
-		// Could handle failure here
-	}
-}
-
-// Send a simple text message to Telegram
-void Telegram_SendMessage(char *message)
-{
-	WIFI_SendTelegramAlert(message);  // Use your WiFi AT-level function
-}
-
-// Send emergency alert with heart rate included
-void Telegram_SendEmergency(int heartRate)
-{
-	char buffer[100];
-	sprintf(buffer, "Emergency! Fall detected! Heart rate: %d bpm", heartRate);
-	Telegram_SendMessage(buffer);
-}
-
-// Optional: check for commands from Telegram (for future server-based commands)
-void Telegram_CheckCommands(void)
-{
-	// Placeholder: in a pure AT + polling setup, MCU would need to poll
-	// Telegram API via a server or using /getUpdates every few seconds
 }

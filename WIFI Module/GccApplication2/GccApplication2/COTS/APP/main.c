@@ -10,9 +10,10 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <stdio.h>
-#inlcude "../MCAL/UART/uart.h"
+#include "../MCAL/UART/uart.h"
 #include "../HAL/LCD/lcd.h"
 #include "../HAL/WIFI/wifi.h"
+#include "../HAL/TELEGRAM/telegram.h"
 
 int main(void)
 {
@@ -21,44 +22,31 @@ int main(void)
 
 	LCD_displayString("System Boot");
 
-	WIFI_Init();
+	Telegram_Init();  // initializes WiFi and connects
 
 	LCD_clearScreen();
-	LCD_displayString("Connecting WiFi");
-
-	if (WIFI_Connect())
-	{
-		LCD_clearScreen();
-		LCD_displayString("WiFi Connected");
-	}
-	else
-	{
-		LCD_clearScreen();
-		LCD_displayString("WiFi Failed");
-		while(1);
-	}
+	LCD_displayString("WiFi Connected");
 
 	uint8_t counter = 0;
 
 	while(1)
 	{
-		/* Example Blynk update */
+		// Example Blynk update
 		WIFI_SendBlynkValue(counter);
-
 		LCD_clearScreen();
 		LCD_displayString("Blynk Sent");
 
 		counter++;
-		if(counter > 100)
-		counter = 0;
+		if(counter > 100) counter = 0;
 
-		/* Example Telegram alert (for testing) */
+		// Example Telegram emergency alert
 		if(counter == 10)
 		{
-			WIFI_SendTelegramAlert("Emergency_Fall_Detected");
+			Telegram_SendEmergency(85); // example heart rate
+			LCD_clearScreen();
+			LCD_displayString("Telegram Alert Sent");
 		}
 
 		_delay_ms(1500);
 	}
 }
-
