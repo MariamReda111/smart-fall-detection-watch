@@ -10,7 +10,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <stdio.h>
-#inlcude "../MCAL/UART/uart"
+#inlcude "../MCAL/UART/uart.h"
 #include "../HAL/LCD/lcd.h"
 #include "../HAL/WIFI/wifi.h"
 

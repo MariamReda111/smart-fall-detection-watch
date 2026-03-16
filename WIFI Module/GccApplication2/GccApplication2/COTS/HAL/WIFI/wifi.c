@@ -102,3 +102,34 @@ void WIFI_SendTelegramAlert(char *message)
 
 	UART_WaitFor("SEND OK");
 }
+
+void Telegram_Init(void)
+{
+	// Any initialization if needed (for now just WiFi is required)
+	WIFI_Init();
+	if(!WIFI_Connect())
+	{
+		// Could handle failure here
+	}
+}
+
+// Send a simple text message to Telegram
+void Telegram_SendMessage(char *message)
+{
+	WIFI_SendTelegramAlert(message);  // Use your WiFi AT-level function
+}
+
+// Send emergency alert with heart rate included
+void Telegram_SendEmergency(int heartRate)
+{
+	char buffer[100];
+	sprintf(buffer, "Emergency! Fall detected! Heart rate: %d bpm", heartRate);
+	Telegram_SendMessage(buffer);
+}
+
+// Optional: check for commands from Telegram (for future server-based commands)
+void Telegram_CheckCommands(void)
+{
+	// Placeholder: in a pure AT + polling setup, MCU would need to poll
+	// Telegram API via a server or using /getUpdates every few seconds
+}

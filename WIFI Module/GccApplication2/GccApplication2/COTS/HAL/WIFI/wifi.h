@@ -34,6 +34,14 @@ void WIFI_SendBlynkValue(uint8_t value);
 /* Telegram alert */
 void WIFI_SendTelegramAlert(char *message);
 
+void Telegram_Init(void);
+
+void Telegram_SendMessage(char *message);
+
+void Telegram_SendEmergency(int heartRate);
+
+void Telegram_CheckCommands(void);
+
 
 
 #endif /* WIFI_H_ */
