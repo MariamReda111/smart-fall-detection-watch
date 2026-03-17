@@ -5,7 +5,7 @@
  *  Author: maria
  */ 
 
-#define F_CPU 16000000UL
+//#define F_CPU 16000000UL
 #include <avr/io.h>
 #include <util/delay.h>
 #include <stdio.h>
@@ -21,7 +21,7 @@ void Telegram_Init(void)
 	if(!WIFI_Connect())
 	{
 		// Optional: handle failure
-		
+
 		LCD_clearScreen();
 		LCD_displayString("WiFi Failed");
 
@@ -50,7 +50,7 @@ void Telegram_SendEmergency(int heartRate)
 	Telegram_SendMessage(buffer);
 }
 
-/* Optional: poll Telegram for commands */
+// for future upgrades when a server is add for holding commands from the guardian
 void Telegram_CheckCommands(void)
 {
 	// Placeholder for server-based polling

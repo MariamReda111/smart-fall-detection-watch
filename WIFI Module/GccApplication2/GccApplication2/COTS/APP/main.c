@@ -17,7 +17,7 @@
 
 int main(void)
 {
-	UART_Init();
+	USART_Init();
 	LCD_init();
 
 	LCD_displayString("System Boot");

@@ -1,4 +1,4 @@
-#define F_CPU 16000000UL
+//#define F_CPU 16000000UL
 
 #include <avr/io.h>
 #include <util/delay.h>
@@ -12,22 +12,24 @@ void WIFI_Init(void)
 {
 	_delay_ms(3000);  // wait for ESP boot
 
-	UART_SendString("AT\r\n");
-	UART_WaitFor("OK");
+	USART_SendString("AT\r\n");
+	USART_WaitFor("OK");
 
-	// Set station mode
-	UART_SendString("AT+CWMODE=1\r\n");
-	UART_WaitFor("OK");
+	// Set station mode (1 -> station mode) for router connecting
+	USART_SendString("AT+CWMODE=1\r\n");
+	USART_WaitFor("OK");
 }
 
 /* Connect to WiFi */
 uint8_t WIFI_Connect(void)
 {
 	char cmd[100];
-	sprintf(cmd, "AT+CWJAP=\"%s\",\"%s\"\r\n", WIFI_SSID, WIFI_PASSWORD);
-	UART_SendString(cmd);
+	
+	// fulling cmd with the SSID and the password (AT+CWJAP="SSID","PASSWORD")
+	sprintf(cmd, "AT+CWJAP=\"%s\",\"%s\"\r\n", WIFI_SSID, WIFI_PASSWORD); 
+	USART_SendString(cmd); // sending to the wifi module
 
-	if (UART_WaitFor("WIFI GOT IP"))
+	if (USART_WaitFor("WIFI GOT IP"))
 	return 1;
 	else
 	return 0;
@@ -52,13 +54,17 @@ void WIFI_SendHTTPRequest(const char* host, const char* request)
 	char cmd[50];
 
 	sprintf(cmd, "AT+CIPSTART=\"TCP\",\"%s\",80\r\n", host);
-	UART_SendString(cmd);
-	UART_WaitFor("OK");
+	USART_SendString(cmd);
+	USART_WaitFor("OK"); // not sure but can cause errors if the wifi module sends something different than "OK"
 
 	sprintf(cmd, "AT+CIPSEND=%d\r\n", strlen(request));
-	UART_SendString(cmd);
-	UART_WaitFor(">");
+	USART_SendString(cmd);
+	USART_WaitFor(">");
 
-	UART_SendString(request);
-	UART_WaitFor("SEND OK");
+	USART_SendString(request);
+	USART_WaitFor("SEND OK");
+	
+	// closing the connection 
+	USART_SendString("AT+CIPCLOSE\r\n");
+	USART_WaitFor("OK");   // optional but recommended
 }
